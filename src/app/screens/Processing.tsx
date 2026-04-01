@@ -16,9 +16,16 @@ export function Processing() {
   }, [navigate]);
 
   const steps = [
-    { label: "Rozpoznawanie tekstu (OCR)", status: "completed" },
-    { label: "Wykrywanie danych wrażliwych (AI)", status: "active" },
-    { label: "Analiza elementów graficznych", status: "pending" }
+    { label: "Rozpoznawanie tekstu (OCR)", status: "completed", layer: null },
+    { label: "Detekcja wzorców (PESEL, NIP, IBAN...)", status: "completed", layer: "Warstwa 1" },
+    { label: "Analiza kontekstowa AI (imiona, adresy...)", status: "active", layer: "Warstwa 2" },
+    { label: "Rozpoznawanie elementów graficznych", status: "pending", layer: "Warstwa 3" }
+  ];
+
+  const detectedChips = [
+    { label: "PESEL", count: 2, color: "bg-destructive text-white" },
+    { label: "NIP", count: 1, color: "bg-orange-500 text-white" },
+    { label: "Telefon", count: 2, color: "bg-blue-500 text-white" }
   ];
 
   return (
@@ -35,7 +42,10 @@ export function Processing() {
         <div className="flex-1 flex items-center justify-center mb-8">
           <div className="relative w-64 h-80">
             {/* Document mockup */}
-            <div className="w-full h-full bg-white rounded-2xl shadow-2xl border-2 border-muted p-6 overflow-hidden">
+            <div className="w-full h-full bg-white rounded-2xl shadow-2xl border-2 border-muted p-6 overflow-hidden relative">
+              {/* Slight dimming overlay */}
+              <div className="absolute inset-0 bg-black/5 pointer-events-none"></div>
+              
               {/* Document content lines */}
               <div className="space-y-2 mb-4">
                 <div className="h-3 bg-muted rounded"></div>
@@ -56,7 +66,7 @@ export function Processing() {
               </div>
             </div>
 
-            {/* Animated scan line */}
+            {/* Animated scan line with glow */}
             <div className="absolute left-0 right-0 top-[40%] h-1 bg-gradient-to-r from-transparent via-accent to-transparent shadow-lg shadow-accent/50 animate-pulse">
               <div className="absolute inset-0 bg-accent blur-md opacity-60"></div>
             </div>
@@ -65,7 +75,7 @@ export function Processing() {
 
         {/* Progress bar */}
         <div className="mb-6">
-          <div className="bg-muted rounded-full h-2 mb-2 overflow-hidden">
+          <div className="bg-[#F5F6F8] rounded-full h-2 mb-2 overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-accent to-accent/80 rounded-full transition-all duration-500"
               style={{ width: "67%" }}
@@ -74,8 +84,8 @@ export function Processing() {
           <div className="text-center text-sm font-semibold text-accent">67%</div>
         </div>
 
-        {/* Status steps */}
-        <div className="space-y-4 mb-8">
+        {/* Status steps with layer badges */}
+        <div className="space-y-3 mb-6">
           {steps.map((step, index) => (
             <div key={index} className="flex items-center gap-3">
               <div className="flex-shrink-0">
@@ -86,22 +96,44 @@ export function Processing() {
                   <div className="w-5 h-5 bg-accent rounded-full animate-pulse"></div>
                 )}
                 {step.status === "pending" && (
-                  <Circle className="w-5 h-5 text-muted" strokeWidth={2} />
+                  <Circle className="w-5 h-5 text-[#9CA3AF]" strokeWidth={2} />
                 )}
               </div>
               <span 
-                className={`text-sm ${
+                className={`text-sm flex-1 ${
                   step.status === "completed" 
                     ? "text-success font-medium" 
                     : step.status === "active"
                     ? "text-accent font-medium"
-                    : "text-muted-foreground"
+                    : "text-[#9CA3AF]"
                 }`}
               >
                 {step.label}
               </span>
+              {step.layer && (
+                <span className="text-xs px-2 py-0.5 rounded bg-[#E5E7EB] text-[#6B7280] font-medium">
+                  {step.layer}
+                </span>
+              )}
             </div>
           ))}
+        </div>
+
+        {/* Live detection card */}
+        <div className="mb-6 bg-[#F5F6F8] border border-[#E5E7EB] rounded-xl p-4">
+          <div className="text-sm font-semibold text-primary mb-3">
+            Wykryto: <span className="text-accent">5 elementów</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {detectedChips.map((chip, index) => (
+              <span 
+                key={index}
+                className={`text-xs font-medium px-3 py-1.5 rounded-full ${chip.color}`}
+              >
+                {chip.label} ×{chip.count}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Cancel button */}

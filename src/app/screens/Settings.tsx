@@ -11,17 +11,21 @@ export function Settings() {
   const [showLabels, setShowLabels] = useState(true);
   const [safetyMargin, setSafetyMargin] = useState(2);
   const [anonymousStats, setAnonymousStats] = useState(false);
+  const [aiThreshold, setAiThreshold] = useState(0.85);
 
   const [detectionToggles, setDetectionToggles] = useState({
     pesel: true,
     nip: true,
     regon: true,
     idCard: true,
-    names: true,
-    addresses: true,
+    passport: true,
+    iban: true,
     phones: true,
     emails: true,
-    iban: true,
+    names: true,
+    addresses: true,
+    customIds: true,
+    financialContext: true,
     faces: true,
     signatures: true,
     stamps: true
@@ -115,37 +119,132 @@ export function Settings() {
 
           {/* Detection section */}
           <div className="px-5 py-6 border-b border-muted">
-            <h3 className="text-sm font-semibold text-primary mb-4">Detekcja</h3>
-            <p className="text-xs text-muted-foreground mb-4">Kategorie do wykrywania:</p>
+            <h3 className="text-sm font-semibold text-primary mb-6">Detekcja</h3>
             
-            <div className="space-y-4">
-              {[
-                { key: "pesel", label: "PESEL" },
-                { key: "nip", label: "NIP" },
-                { key: "regon", label: "REGON" },
-                { key: "idCard", label: "Dowód osobisty" },
-                { key: "names", label: "Imiona i nazwiska" },
-                { key: "addresses", label: "Adresy" },
-                { key: "phones", label: "Telefony" },
-                { key: "emails", label: "E-maile" },
-                { key: "iban", label: "IBAN" },
-                { key: "faces", label: "Twarze" },
-                { key: "signatures", label: "Podpisy" },
-                { key: "stamps", label: "Pieczątki" }
-              ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between">
-                  <label className="text-sm text-primary">
-                    {item.label}
-                  </label>
-                  <Switch.Root
-                    checked={detectionToggles[item.key as keyof typeof detectionToggles]}
-                    onCheckedChange={() => toggleDetection(item.key as keyof typeof detectionToggles)}
-                    className="w-11 h-6 bg-switch-background rounded-full relative transition-colors data-[state=checked]:bg-accent"
-                  >
-                    <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px] shadow-md" />
-                  </Switch.Root>
-                </div>
-              ))}
+            {/* Layer 1: Pattern-based detection */}
+            <div className="mb-6">
+              <h4 className="text-xs font-medium text-[#6B7280] mb-1">
+                Wzorce automatyczne (Warstwa 1)
+              </h4>
+              <p className="text-xs text-[#9CA3AF] mb-4">
+                Natychmiastowa detekcja danych o sztywnej strukturze
+              </p>
+              
+              <div className="space-y-3">
+                {[
+                  { key: "pesel", label: "PESEL", badge: "suma kontrolna" },
+                  { key: "nip", label: "NIP", badge: "suma kontrolna" },
+                  { key: "regon", label: "REGON", badge: null },
+                  { key: "idCard", label: "Dowód osobisty", badge: null },
+                  { key: "passport", label: "Paszport", badge: null },
+                  { key: "iban", label: "IBAN", badge: "checksum ISO" },
+                  { key: "phones", label: "Telefony", badge: null },
+                  { key: "emails", label: "E-maile", badge: null }
+                ].map((item) => (
+                  <div key={item.key} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-primary">
+                        {item.label}
+                      </label>
+                      {item.badge && (
+                        <span className="text-xs text-[#9CA3AF] bg-[#F5F6F8] px-2 py-0.5 rounded">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                    <Switch.Root
+                      checked={detectionToggles[item.key as keyof typeof detectionToggles]}
+                      onCheckedChange={() => toggleDetection(item.key as keyof typeof detectionToggles)}
+                      className="w-11 h-6 bg-switch-background rounded-full relative transition-colors data-[state=checked]:bg-accent"
+                    >
+                      <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px] shadow-md" />
+                    </Switch.Root>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Layer 2: AI contextual analysis */}
+            <div className="mb-6">
+              <h4 className="text-xs font-medium text-[#6B7280] mb-1">
+                Analiza kontekstowa AI (Warstwa 2)
+              </h4>
+              <p className="text-xs text-[#9CA3AF] mb-4">
+                Wykrywanie danych wymagających rozumienia kontekstu
+              </p>
+              
+              <div className="space-y-3 mb-4">
+                {[
+                  { key: "names", label: "Imiona i nazwiska" },
+                  { key: "addresses", label: "Adresy pocztowe" },
+                  { key: "customIds", label: "Niestandardowe numery ID" },
+                  { key: "financialContext", label: "Dane finansowe w kontekście" }
+                ].map((item) => (
+                  <div key={item.key} className="flex items-center justify-between">
+                    <label className="text-sm text-primary">
+                      {item.label}
+                    </label>
+                    <Switch.Root
+                      checked={detectionToggles[item.key as keyof typeof detectionToggles]}
+                      onCheckedChange={() => toggleDetection(item.key as keyof typeof detectionToggles)}
+                      className="w-11 h-6 bg-switch-background rounded-full relative transition-colors data-[state=checked]:bg-accent"
+                    >
+                      <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px] shadow-md" />
+                    </Switch.Root>
+                  </div>
+                ))}
+              </div>
+
+              {/* AI Threshold Slider */}
+              <div>
+                <label className="text-sm text-muted-foreground mb-3 block">
+                  Próg pewności AI: {aiThreshold.toFixed(2)}
+                </label>
+                <Slider.Root
+                  value={[aiThreshold]}
+                  onValueChange={(value) => setAiThreshold(value[0])}
+                  min={0.5}
+                  max={1.0}
+                  step={0.05}
+                  className="relative flex items-center w-full h-5"
+                >
+                  <Slider.Track className="bg-muted relative grow h-1 rounded-full">
+                    <Slider.Range className="absolute bg-accent h-full rounded-full" />
+                  </Slider.Track>
+                  <Slider.Thumb className="block w-5 h-5 bg-white border-2 border-accent rounded-full shadow-md hover:scale-110 transition-transform" />
+                </Slider.Root>
+              </div>
+            </div>
+
+            {/* Layer 3: Visual recognition */}
+            <div>
+              <h4 className="text-xs font-medium text-[#6B7280] mb-1">
+                Rozpoznawanie graficzne (Warstwa 3)
+              </h4>
+              <p className="text-xs text-[#9CA3AF] mb-4">
+                Wykrywanie elementów wizualnych w dokumentach
+              </p>
+              
+              <div className="space-y-3">
+                {[
+                  { key: "faces", label: "Twarze" },
+                  { key: "signatures", label: "Podpisy odręczne" },
+                  { key: "stamps", label: "Pieczątki" }
+                ].map((item) => (
+                  <div key={item.key} className="flex items-center justify-between">
+                    <label className="text-sm text-primary">
+                      {item.label}
+                    </label>
+                    <Switch.Root
+                      checked={detectionToggles[item.key as keyof typeof detectionToggles]}
+                      onCheckedChange={() => toggleDetection(item.key as keyof typeof detectionToggles)}
+                      className="w-11 h-6 bg-switch-background rounded-full relative transition-colors data-[state=checked]:bg-accent"
+                    >
+                      <Switch.Thumb className="block w-5 h-5 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[22px] shadow-md" />
+                    </Switch.Root>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
